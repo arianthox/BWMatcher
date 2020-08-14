@@ -1,130 +1,159 @@
 
 package com.arianthox.predictor.hmm.vq;
 
-import java.util.Vector;
+import java.io.Serializable;
 import java.util.Enumeration;
+import java.util.Vector;
 
-/**
- * <b>description:</b> centroid de un Codebook
- * <b>Entrada:</b> Punto k-dimensional<br>
- * <b>Salida:</b> Distorsion
- * @author Ricardo Sanchez Delgado
- */
-public class CentroId extends Point{
+
+public class CentroId extends Points implements Serializable {
     /**
-     * Distorsion - Suma total de los puntos distantes al centro
+     * distortion measure - sum of all points' distances from the Centroid
      */
     protected double distortion = 0;
     /**
-     * Almacena los puntos distantes al centro
+     * stores the points that belong to this Centroid or cell
      */
-    protected Vector<Point> pts = new Vector<Point>(0);
+    public Vector<Points> pts = new Vector<Points>(0);
     /**
-     * Numero total de puntos lejanos al centro
+     * total number of points that belong to this Centroid or cell
      */
     protected int total_pts;
+
     /**
-     * Constructor que crea el Centro a partir de las cordenadas proporcionadas<br>
-     * @param Co Array de Coordenadas
+     * constructor to create a Centroid from input coordinates<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @param Co
+     *            coordinates array
      */
-    public CentroId(double Co[]){
+    public CentroId(double Co[]) {
         super(Co);
         total_pts = 0;
     }
+
     /**
-     * Devuelve un punto especifico indexado<br>
-     * @param index Numero Deseado
-     * @return Punto correspondiente al Index Dado
+     * get a Points at specified index<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @param index
+     *            index number
+     * @return the Points at the specified index
      */
-    public Point getPoint(int index){
-        return (Point)pts.get(index);
+    public Points getPoint(int index) {
+        return pts.get(index);
     }
+
     /**
-     * Retorna el Numero de Puntos en esta Celda
-     * @return Numero de Puntos
+     * returns the number of points in this cell<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @return number of points
      */
-    public int getNumPts(){
+    public int getNumPts() {
         return total_pts;
     }
+
     /**
-     * Remueve un punto dado de la Celda
-     * @param pt Punto para ser removido
-     * @param dist Distancia del Centro
+     * removes a given Points from the Centroid's cell<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @param pt
+     *            the Points to be removed
+     * @param dist
+     *            distance from the Centroid
      */
-    public void remove(Point pt, double dist){
-        Point tmpPoint = (Point)pts.get(0);
+    public void remove(Points pt, double dist) {
+        Points tmpPoint = pts.get(0);
         int i = -1;
-        
-        Enumeration enume = pts.elements();
+
+        Enumeration enums = pts.elements();
         boolean found = false;
-        while( enume.hasMoreElements() && !found ){
-            tmpPoint = (Point)enume.nextElement();
+        while (enums.hasMoreElements() && !found) {
+            tmpPoint = (Points) enums.nextElement();
             i++;
-            
-            // Busca un punto identico en el Vector pts
-            if ( Point.equals(pt, tmpPoint) ){
+
+            // find the identical Points in pts vector
+            if (equals(pt, tmpPoint)) {
                 found = true;
             }
         }
-        
-        if (found){
-            // remueve el punto del Vector pts
+
+        if (found) {
+            // remove Points from pts vector
             pts.remove(i);
-            // Actualiza la distorsion
+            // update distortion measure
             distortion -= dist;
-            // Actualiza el numero de puntos
+            // update number of points
             total_pts--;
         }
-        else{
-            //System.out.println("err: Punto no Encontrado");
+        else {
+            System.out.println("err: point not found");
         }
     }
+
     /**
-     * Agrega el punto al Centro<br>
-     * @param pt Punto alejado del centro
-     * @param dist Distancia al Centro
+     * add Points to Centroid's cell<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @param pt
+     *            a Points belonging to the Centroid
+     * @param dist
+     *            distance from the Centroid
      */
-    public void add(Point pt, double dist){
-        // Actualiza el Numero de Puntos
+    public void add(Points pt, double dist) {
+        // update number of points
         total_pts++;
-        // Agrega el punto al Vector pts
+        // add Points to pts vector
         pts.add(pt);
-        // Actualiza la distorsion
+        // update distortion measure
         distortion += dist;
     }
+
     /**
-     * Actualiza el Centroide Dado por los Puntos Agregados
+     * update Centroid by taking average of all points in the cell<br>
+     * calls: none<br>
+     * called by: codebook
      */
-    public void update(){
+    public void update() {
         double sum_coordinates[] = new double[dimension];
-        Point tmpPoint;
-        Enumeration enume = pts.elements();
-        
-        while( enume.hasMoreElements() ){
-            tmpPoint = (Point)enume.nextElement();
-            
-            // Calcula la suma de todas las coordenadas
-            for (int k = 0; k < dimension; k++){
+        Points tmpPoint;
+        Enumeration enums = pts.elements();
+
+        while (enums.hasMoreElements()) {
+            tmpPoint = (Points) enums.nextElement();
+
+            // calculate the sum of all coordinates
+            for (int k = 0; k < dimension; k++) {
                 sum_coordinates[k] += tmpPoint.getCo(k);
             }
         }
-        
-        // Divide la suma de las coordenadas por el total de numeros dados
-        for( int k = 0 ; k < dimension; k++){
-            setCo(k, sum_coordinates[k] / (double)total_pts);
-            pts = new Vector<Point>(0);
+
+        // divide sum of coordinates by total number points to get average
+        for (int k = 0; k < dimension; k++) {
+            setCo(k, sum_coordinates[k] / total_pts);
+            pts = new Vector(0);
         }
-        
-        // resetea el numero de puntos
+
+        // reset number of points
         total_pts = 0;
-        // resetea la distorsion
+        // reset distortion measure
         distortion = 0;
     }
+
     /**
-     * retorna la distorsion actual
-     * @return Distorsion Actual
+     * returns the distortion measure of the current cell<br>
+     * calls: none<br>
+     * called by: codebook
+     *
+     * @return distortion of current cell
      */
-    public double getDistortion(){
+    public double getDistortion() {
         return distortion;
     }
 }

@@ -7,8 +7,25 @@ spring:
     name: BWMatcher
   main:
     allow-bean-definition-overriding: true
+  kafka:
+    bootstrap-servers: broker:9092
+    consumer:
+      group-id: matcher
+    template:
+      default-topic: draws
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  health:
+    elasticsearch:
+      enabled: false
 
 eureka:
+  instance:
+    lease-expiration-duration-in-seconds: 240
+    lease-renewal-interval-in-seconds: 120
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
   client:
     fetch-registry: true
     register-with-eureka: true

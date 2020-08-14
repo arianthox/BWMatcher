@@ -35,5 +35,4 @@ public class SwaggerConfig {
                 new Contact("Ricardo Sanchez", "arianthox", "arianthox@gmail.com"),
                 "License of API", "API license URL", Collections.emptyList());
     }
-
 }

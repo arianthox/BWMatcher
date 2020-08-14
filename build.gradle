@@ -8,7 +8,7 @@ plugins {
 def defaultEncoding = 'UTF-8'
 [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
 
-group = 'com.globant/BrainWaves/BWMatcher'
+group = 'com.arianthox/Predictor/BWMatcher'
 version = '0.0.1-SNAPSHOT'
 
 repositories {
@@ -18,10 +18,14 @@ repositories {
 
 ext {
     set('springCloudVersion', "Hoxton.RC2")
+    set('lombokVersion', "1.18.12")
+    set('AkkaVersion', "2.6.6")
+    set('AlpakkaKafkaVersion', "2.0.2")
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 configurations {
     developmentOnly
@@ -44,8 +48,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation "com.typesafe.akka:akka-stream-kafka_2.13:${AlpakkaKafkaVersion}"
+    implementation "com.typesafe.akka:akka-stream_2.13:${AkkaVersion}"
+    implementation "com.typesafe.akka:akka-actor-typed_2.13:${AkkaVersion}"
+    implementation "com.typesafe.akka:akka-actor_2.13:${AkkaVersion}"
+
+    implementation project(":commons")
+
     implementation 'io.springfox:springfox-swagger2:2.9.2'
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+    implementation "com.google.code.gson:gson:2.8.6"
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
