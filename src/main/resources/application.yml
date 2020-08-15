@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: BWMatcher
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
   main:
     allow-bean-definition-overriding: true
   kafka:
@@ -13,9 +17,6 @@ spring:
       group-id: matcher
     template:
       default-topic: draws
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   health:
     elasticsearch:
       enabled: false
