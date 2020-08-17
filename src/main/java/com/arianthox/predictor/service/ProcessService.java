@@ -8,6 +8,7 @@ import akka.stream.ActorAttributes;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.arianthox.predictor.commons.adapter.KafkaConsumer;
+import com.arianthox.predictor.commons.adapter.KafkaProducer;
 import com.arianthox.predictor.commons.model.DrawVO;
 import com.arianthox.predictor.commons.model.TopicID;
 import com.arianthox.predictor.commons.utils.CommonUtil;
@@ -25,15 +26,16 @@ import java.util.concurrent.CompletionStage;
 public class ProcessService {
 
     private final KafkaConsumer kafkaConsumer;
+    private final KafkaProducer kafkaProducer;
     private final MatcherService matcherService;
     private final transient Gson gson;
     private final transient ActorSystem system;
 
-    public ProcessService(KafkaConsumer kafkaConsumer, Gson gson, MatcherService matcherService) {
+    public ProcessService(KafkaConsumer kafkaConsumer, KafkaProducer kafkaProducer, Gson gson, MatcherService matcherService) {
         this.kafkaConsumer = kafkaConsumer;
+        this.kafkaProducer = kafkaProducer;
         this.gson = gson;
         this.system = ActorSystem.create(Behaviors.empty(), "think-gear-fx-system");
-        ;
         this.matcherService = matcherService;
     }
 
@@ -48,8 +50,12 @@ public class ProcessService {
 
             final Sink<DrawVO, CompletionStage<Done>> sink = Sink.foreach(draw -> {
                         int[] values = draw.getN().stream().mapToInt(Integer::intValue).toArray();
-                        HashMap<String, Double> stringDoubleHashMap = matcherService.matchKey(values);
-                        log.info("Result:" + draw.toString() + " - " + Collections.singletonList(stringDoubleHashMap).toString());
+                        HashMap<String, Double> result = matcherService.matchKey(values);
+                        if(result==null || result.isEmpty() || result.entrySet().stream().findFirst().get().getValue()<1) {
+                            kafkaProducer.send("results", draw, done -> {
+                                log.info("Result:" + draw.toString() + " - " + Collections.singletonList(result).toString());
+                            });
+                        }
                     }
 
             );

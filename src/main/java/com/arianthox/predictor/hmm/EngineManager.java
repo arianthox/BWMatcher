@@ -212,7 +212,7 @@ public class EngineManager {
             double probs = entry.getValue().getT2().getProbability(quantized);
             viterbiMap.put(entry.getKey(), viterbi);
 
-            Logger.getAnonymousLogger().info(String.format("Key:%s - Distortion: %f - Viterbi: %f - Probs: %f", entry.getKey(), distortion, viterbi, probs));
+            Logger.getAnonymousLogger().fine(String.format("Key:%s - Distortion: %f - Viterbi: %f - Probs: %f", entry.getKey(), distortion, viterbi, probs));
 
             distortionMap.put(entry.getKey(), distortion);
             if (distortion < lowestDistortion.get()) {
@@ -223,7 +223,7 @@ public class EngineManager {
 
         distortionMap.entrySet().stream().forEach(entry -> {
             double avgDistortion = (lowestDistortion.get() / distortionMap.get(entry.getKey()).doubleValue());
-            Logger.getAnonymousLogger().info(String.format("Key:%s - Avg Distortion: %f", entry.getKey(), avgDistortion));
+            Logger.getAnonymousLogger().fine(String.format("Key:%s - Avg Distortion: %f", entry.getKey(), avgDistortion));
             distortionAvgMap.put(entry.getKey(), avgDistortion);
         });
 

@@ -33,7 +33,7 @@ public class MatcherService {
     }
 
     public HashMap<String, Double> matchKey(int[] signal) throws Exception {
-        log.log(Level.INFO,"Matching: {0}",signal);
+        log.log(Level.FINE,"Matching: {0}",signal);
         return engineManager.matchKey(signal);
     }
 
