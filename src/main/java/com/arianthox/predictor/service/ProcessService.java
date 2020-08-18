@@ -9,6 +9,7 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import com.arianthox.predictor.commons.adapter.KafkaConsumer;
 import com.arianthox.predictor.commons.adapter.KafkaProducer;
+import com.arianthox.predictor.commons.hhm.dsp.NFourierTransform;
 import com.arianthox.predictor.commons.model.DrawVO;
 import com.arianthox.predictor.commons.model.TopicID;
 import com.arianthox.predictor.commons.utils.CommonUtil;
@@ -19,7 +20,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 @Service
 @Log
@@ -35,7 +39,7 @@ public class ProcessService {
         this.kafkaConsumer = kafkaConsumer;
         this.kafkaProducer = kafkaProducer;
         this.gson = gson;
-        this.system = ActorSystem.create(Behaviors.empty(), "think-gear-fx-system");
+        this.system = ActorSystem.create(Behaviors.empty(), "matcher-system");
         this.matcherService = matcherService;
     }
 
@@ -51,10 +55,15 @@ public class ProcessService {
             final Sink<DrawVO, CompletionStage<Done>> sink = Sink.foreach(draw -> {
                         int[] values = draw.getN().stream().mapToInt(Integer::intValue).toArray();
                         HashMap<String, Double> result = matcherService.matchKey(values);
-                        if(result==null || result.isEmpty() || result.entrySet().stream().findFirst().get().getValue()<1) {
+                        draw.setMatch(result);
+                        Map.Entry<List<Double>, List<Double>> fourier = NFourierTransform.computeFFT(draw.getN().stream().mapToDouble(Double::valueOf).boxed().collect(Collectors.toList()));
+                        draw.setFourier(fourier);
+                        if (result.entrySet().stream().findFirst().get().getValue() <= 1 || result.entrySet().stream().count() > 2) {
                             kafkaProducer.send("results", draw, done -> {
-                                log.info("Result:" + draw.toString() + " - " + Collections.singletonList(result).toString());
+                                //log.info("Result:" + draw.toString() + " - " + Collections.singletonList(result).toString());
                             });
+                        } else {
+                            //log.info("Result:" + draw.toString() + " - " + Collections.singletonList(result).toString());
                         }
                     }
 
